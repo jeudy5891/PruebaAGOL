@@ -234,6 +234,13 @@ async function saveIncidente(e) {
   const lat = val('f_lat');
   const lon = val('f_lon');
 
+  const telDigits = val('f_Telefono').replace(/\D/g, '');
+  if (telDigits && Number(telDigits) > 2147483647) {
+    alert('El teléfono debe tener máximo 10 dígitos.');
+    return;
+  }
+  const telefono = telDigits ? Number(telDigits) : null;
+
   const attributes = {
     Fecha: localValueToEpochUTC(val('f_Fecha')),
     Despachador: val('f_Despachador'),
@@ -245,7 +252,7 @@ async function saveIncidente(e) {
     CME: val('f_CME'),
     Direccion: val('f_Direccion'),
     Usuario: val('f_Usuario'),
-    Telefono: val('f_Telefono') ? Number(val('f_Telefono')) : null,
+    Telefono: telefono,
     Observaciones: val('f_Observaciones'),
     Oficial_Enlace: val('f_Oficial_Enlace'),
     Correo_Oficial: val('f_Correo_Oficial'),
