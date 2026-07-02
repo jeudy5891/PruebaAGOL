@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Incidentes 911 · CNE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-side">
+    <div class="brand-row">
+      <img src="Logo%20vaciado.png" alt="CNE">
+      <span class="brand-text">Incidentes 911</span>
+    </div>
+    <h1 class="headline">Atención de incidentes<br><em>en tiempo real</em></h1>
+    <p class="lead">Plataforma de registro y seguimiento de incidentes reportados por el 911 a la Comisión Nacional de Prevención de Riesgos y Atención de Emergencias.</p>
+    <ul class="feature-list">
+      <li><span class="check">✓</span> Registro de incidentes</li>
+      <li><span class="check">✓</span> Consulta y edición de reportes</li>
+      <li><span class="check">✓</span> Indicadores en tiempo real</li>
+      <li><span class="check">✓</span> Integración con ArcGIS Online</li>
+    </ul>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-card">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabLogin">Iniciar sesión</button>
+        <button type="button" class="auth-tab" id="tabRegister">Registrarse</button>
+      </div>
+
+      <!-- Iniciar sesión -->
+      <div id="loginPanel">
+        <h2>Iniciar sesión</h2>
+        <p class="sub">Accede con tu cuenta institucional</p>
+        <form id="loginForm">
+          <div class="field">
+            <label>Correo electrónico</label>
+            <div class="input-icon">
+              <span class="icon">✉</span>
+              <input type="email" id="login_Correo" placeholder="usuario@cne.go.cr" required>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-row">
+              <label>Contraseña</label>
+              <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+            <div class="input-icon">
+              <span class="icon">🔒</span>
+              <input type="password" id="login_Password" placeholder="••••••••" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="loginSubmit">Ingresar</button>
+        </form>
+        <p class="hint" id="loginMsg">🔒 Acceso exclusivo para funcionarios autorizados</p>
+      </div>
+
+      <!-- Registrarse -->
+      <div id="registerPanel" style="display:none">
+        <h2>Crear cuenta</h2>
+        <p class="sub">Regístrate con tu CME asignado</p>
+        <form id="registerForm">
+          <div class="field">
+            <label>Nombre completo</label>
+            <input type="text" id="reg_Nombre" placeholder="Nombre y apellidos" required>
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" id="reg_Correo" placeholder="usuario@cne.go.cr" required>
+          </div>
+          <div class="field">
+            <label>Región</label>
+            <select id="reg_Region" required></select>
+          </div>
+          <div class="field">
+            <label>CME</label>
+            <input type="text" id="reg_CME" readonly placeholder="Se completa según la región">
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="input-icon">
+              <span class="icon">🔒</span>
+              <input type="password" id="reg_Password" placeholder="••••••••" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Registrarse</button>
+        </form>
+        <p class="hint" id="registerMsg"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/login.js"></script>
+<script src="js/register.js"></script>
+</body>
+</html>

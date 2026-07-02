@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Incidentes 911 · CNE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <button class="toggle-btn" id="sidebarToggle" title="Colapsar menú"><i data-lucide="menu" width="20" height="20"></i></button>
+      <img src="Logo%20vaciado.png" alt="CNE">
+      <span class="brand-text">Incidentes 911</span>
+    </div>
+
+    <div class="nav-label">NAVEGACIÓN</div>
+    <a href="#" class="nav-item active">
+      <span class="nav-icon"><i data-lucide="siren" width="16" height="16"></i></span><span class="nav-text">Incidentes</span>
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="profile-row">
+        <div class="avatar" id="profileAvatar">--</div>
+        <div class="info">
+          <div class="name" id="profileName">—</div>
+          <div class="email" id="profileEmail">—</div>
+        </div>
+      </div>
+      <button class="logout-row" id="logoutBtn">
+        <span class="nav-icon"><i data-lucide="log-out" width="16" height="16"></i></span><span class="logout-text">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <h1>Incidentes</h1>
+        <p class="sub">Registro y seguimiento de incidentes reportados al 911</p>
+      </div>
+      <button class="btn-add" id="btnAdd">+ Añadir incidente</button>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi-card"><div class="value" id="kpiTotal">0</div><div class="label">Total incidentes</div></div>
+      <div class="kpi-card"><div class="value" id="kpiHoy">0</div><div class="label">Reportados hoy</div></div>
+      <div class="kpi-card"><div class="value" id="kpiP1">0</div><div class="label">Prioridad 1</div></div>
+      <div class="kpi-card"><div class="value" id="kpiRegiones">0</div><div class="label">Regiones activas</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="text" id="filterFecha" placeholder="Todas las fechas">
+      </div>
+      <div class="field">
+        <label>Región</label>
+        <select id="filterRegion"><option value="">Todas</option></select>
+      </div>
+      <div class="field">
+        <label>CME</label>
+        <select id="filterCME"><option value="">Todos</option></select>
+      </div>
+      <div class="field grow">
+        <label>Consecutivo</label>
+        <input type="text" id="filterConsecutivo" placeholder="Buscar por consecutivo...">
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Consecutivo</th>
+            <th>Fecha</th>
+            <th>Región</th>
+            <th>CME</th>
+            <th style="text-align:right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none">No hay incidentes registrados aún.</div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal: agregar / editar incidente -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitle">Añadir incidente</h2>
+        <p class="sub">Complete la información del incidente</p>
+      </div>
+      <button class="close-btn" id="closeModal"><i data-lucide="x" width="18" height="18"></i></button>
+    </div>
+
+    <form id="incidentForm">
+      <input type="hidden" id="f_objectid">
+      <input type="hidden" id="f_lat">
+      <input type="hidden" id="f_lon">
+
+      <div class="section-title">Datos del incidente</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Fecha y hora</label>
+          <input type="text" id="f_Fecha" placeholder="Seleccionar fecha y hora">
+        </div>
+        <div class="field">
+          <label>Despachador</label>
+          <select id="f_Despachador"></select>
+        </div>
+        <div class="field">
+          <label>Turno</label>
+          <select id="f_Turno"></select>
+        </div>
+        <div class="field">
+          <label>Tipo de incidente</label>
+          <select id="f_Tipo_Incidente"></select>
+        </div>
+        <div class="field">
+          <label>Prioridad</label>
+          <select id="f_Prioridad_incidente"></select>
+        </div>
+        <div class="field">
+          <label>Consecutivo</label>
+          <input type="text" id="f_Consecutivo_Completo" placeholder="2026-07-02-00001">
+        </div>
+      </div>
+
+      <div class="section-title">Ubicación</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Región</label>
+          <select id="f_Region"></select>
+        </div>
+        <div class="field">
+          <label>CME</label>
+          <input type="text" id="f_CME">
+        </div>
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <textarea id="f_Direccion"></textarea>
+      </div>
+      <div id="map"></div>
+      <div class="map-actions">
+        <button type="button" class="btn-ghost" id="btnGps"><i data-lucide="map-pin" width="14" height="14"></i> Usar mi ubicación</button>
+        <span class="sub">Puede hacer clic en el mapa para ajustar el punto</span>
+      </div>
+
+      <div class="section-title">Persona que reporta</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="f_Usuario">
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="text" id="f_Telefono">
+        </div>
+      </div>
+      <div class="field">
+        <label>Observaciones</label>
+        <textarea id="f_Observaciones"></textarea>
+      </div>
+
+      <div class="section-title">Oficial de enlace / CME</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Oficial de enlace</label>
+          <input type="text" id="f_Oficial_Enlace">
+        </div>
+        <div class="field">
+          <label>Correo del oficial</label>
+          <input type="email" id="f_Correo_Oficial">
+        </div>
+        <div class="field">
+          <label>Encargado del CME</label>
+          <input type="text" id="f_Encargado_CME">
+        </div>
+        <div class="field">
+          <label>Correo del CME</label>
+          <input type="text" id="f_Correo_Encargado">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelModal">Cancelar</button>
+        <button type="submit" class="btn-add">Guardar incidente</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: confirmar eliminación -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div>
+        <h2>Eliminar incidente</h2>
+        <p class="sub">Esta acción no se puede deshacer.</p>
+      </div>
+    </div>
+    <p>¿Deseas eliminar este incidente de forma permanente?</p>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" id="confirmCancel">Cancelar</button>
+      <button type="button" class="btn-danger" id="confirmAccept">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="js/config.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
