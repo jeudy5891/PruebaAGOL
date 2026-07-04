@@ -197,6 +197,17 @@ a { color: inherit; }
 .toolbar .field.grow { flex: 1; }
 .toolbar .field.grow input { width: 100%; }
 
+.export-buttons { display: flex; gap: 10px; }
+.btn-export {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; border: 1px solid transparent; white-space: nowrap;
+}
+.btn-export.excel { color: var(--success); background: #eefbf0; border-color: #bfe8c6; }
+.btn-export.excel:hover { background: #dff5e3; }
+.btn-export.pdf { color: var(--error); background: #fdeeee; border-color: #f3c6c6; }
+.btn-export.pdf:hover { background: #fbdede; }
+
 .table-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
 table { width: 100%; border-collapse: collapse; }
 thead th { text-align: left; font-size: 12px; letter-spacing: .04em; color: var(--neutral); padding: 14px 18px; border-bottom: 1px solid var(--border); font-weight: 700; }
@@ -241,6 +252,17 @@ tbody tr:hover { background: var(--surface); }
 .field textarea { resize: vertical; min-height: 70px; }
 
 #map { height: 220px; border-radius: var(--radius-md); margin-top: 6px; border: 1px solid var(--border); }
+
+.attachments-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.attachments-list:empty { display: none; }
+.attachment-chip {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 10px; font-size: 13px; background: var(--surface);
+}
+.attachment-chip a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.attachment-chip a:hover { text-decoration: underline; }
+.attachment-chip button { border: none; background: none; color: var(--error); cursor: pointer; display: inline-flex; padding: 2px; }
 .map-actions { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
 .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; color: var(--primary); }
 .btn-ghost:hover { background: var(--surface); }

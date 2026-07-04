@@ -1,4 +1,5 @@
 let incidentes = [];
+let visibleIncidentes = [];
 let map, marker, pendingDeleteId = null;
 let fpFecha, fpFiltro;
 let currentUser = null;
@@ -125,8 +126,47 @@ function applyFilters() {
     if (consecutivo && !(it.Consecutivo_Completo || '').toLowerCase().includes(consecutivo)) return false;
     return true;
   });
+  visibleIncidentes = filtered;
   renderTable(filtered);
   renderKpis(incidentes);
+}
+
+function turnoLabel(v) {
+  const t = DOMAINS.Turno.find(x => x.value === v);
+  return t ? t.label : (v || '');
+}
+
+// ---------- Exportar ----------
+function exportExcel() {
+  const headers = ['Consecutivo', 'Fecha', 'Despachador', 'Turno', 'Tipo de incidente', 'Prioridad', 'Región', 'CME', 'Dirección', 'Persona que reporta', 'Teléfono', 'Observaciones'];
+  const rows = visibleIncidentes.map(it => [
+    it.Consecutivo_Completo || '', fmtFecha(it.Fecha), it.Despachador || '', turnoLabel(it.Turno), it.Tipo_Incidente || '',
+    it.Prioridad_incidente ?? '', it.Region || '', it.CME || '', it.Direccion || '', it.Usuario || '', it.Telefono ?? '', it.Observaciones || ''
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map(() => ({ wch: 18 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Incidentes');
+  XLSX.writeFile(wb, `incidentes_${ymdCR(Date.now())}.xlsx`);
+}
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  doc.setFontSize(14);
+  doc.text('Informe de Incidentes 911 · CNE', 14, 15);
+  doc.setFontSize(9);
+  doc.text(`CME: ${currentUser && currentUser.cme ? currentUser.cme : 'Todos'}  ·  Generado: ${new Date().toLocaleString('es-CR', { timeZone: 'America/Costa_Rica' })}`, 14, 21);
+  doc.autoTable({
+    startY: 26,
+    head: [['Consecutivo', 'Fecha', 'Despachador', 'Turno', 'Tipo', 'Prioridad', 'Región', 'CME', 'Dirección']],
+    body: visibleIncidentes.map(it => [
+      it.Consecutivo_Completo || '', fmtFecha(it.Fecha), it.Despachador || '', turnoLabel(it.Turno), it.Tipo_Incidente || '',
+      it.Prioridad_incidente ?? '', it.Region || '', it.CME || '', it.Direccion || ''
+    ]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [19, 60, 101] }
+  });
+  doc.save(`incidentes_${ymdCR(Date.now())}.pdf`);
 }
 
 function renderTable(list) {
@@ -175,6 +215,7 @@ function openModal(mode, record) {
     document.getElementById('f_objectid').value = '';
     fpFecha.setDate(nowLocalValue(), true);
     document.getElementById('f_Consecutivo_Completo').value = suggestConsecutivo();
+    document.getElementById('existingAttachments').innerHTML = '';
   }
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -198,11 +239,51 @@ function populateForm(r) {
   document.getElementById('f_Encargado_CME').value = r.Encargado_CME || '';
   document.getElementById('f_Correo_Encargado').value = r.Correo_Encargado || '';
   if (r.__geometry) setMarker(r.__geometry.y, r.__geometry.x);
+  loadAttachments(r.objectid);
 }
 
 function editIncidente(objectid) {
   const record = incidentes.find(i => i.objectid === objectid);
   if (record) openModal('edit', record);
+}
+
+// ---------- Adjuntos ----------
+async function loadAttachments(objectid) {
+  const container = document.getElementById('existingAttachments');
+  container.innerHTML = '';
+  if (!objectid) return;
+  try {
+    const res = await fetch(`${ARCGIS_LAYER_URL}/${objectid}/attachments?f=json`);
+    const data = await res.json();
+    (data.attachmentInfos || []).forEach(att => {
+      const chip = document.createElement('div');
+      chip.className = 'attachment-chip';
+      chip.innerHTML = `<a href="${ARCGIS_LAYER_URL}/${objectid}/attachments/${att.id}" target="_blank" rel="noopener">${att.name}</a>
+        <button type="button" title="Eliminar adjunto"><i data-lucide="x" width="14" height="14"></i></button>`;
+      chip.querySelector('button').addEventListener('click', () => deleteAttachment(objectid, att.id));
+      container.appendChild(chip);
+    });
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error cargando adjuntos', err);
+  }
+}
+
+async function deleteAttachment(objectid, attId) {
+  if (!confirm('¿Eliminar este adjunto?')) return;
+  const body = new URLSearchParams();
+  body.append('f', 'json');
+  body.append('attachmentIds', attId);
+  await fetch(`${ARCGIS_LAYER_URL}/${objectid}/deleteAttachments`, { method: 'POST', body });
+  loadAttachments(objectid);
+}
+
+async function uploadAttachments(objectid, files) {
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('attachment', file);
+    await fetch(`${ARCGIS_LAYER_URL}/${objectid}/addAttachment`, { method: 'POST', body: fd });
+  }
 }
 
 // ---------- Modal confirmar eliminación ----------
@@ -273,6 +354,9 @@ async function saveIncidente(e) {
   const data = await res.json();
   const result = (data.addResults || data.updateResults || [])[0];
   if (result && result.success) {
+    const savedObjectId = objectid ? Number(objectid) : result.objectId;
+    const files = document.getElementById('f_Attachments').files;
+    if (files.length) await uploadAttachments(savedObjectId, files);
     closeModal();
     loadIncidentes();
   } else {
@@ -329,6 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('confirmCancel').addEventListener('click', closeConfirm);
   document.getElementById('confirmAccept').addEventListener('click', performDelete);
+
+  document.getElementById('btnExportExcel').addEventListener('click', exportExcel);
+  document.getElementById('btnExportPDF').addEventListener('click', exportPDF);
 
   ['filterRegion', 'filterCME', 'filterConsecutivo'].forEach(id => {
     document.getElementById(id).addEventListener('input', applyFilters);
