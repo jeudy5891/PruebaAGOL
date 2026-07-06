@@ -96,11 +96,15 @@ async function loadIncidentes() {
     ? `CME='${escapeSql(currentUser.cme)}'`
     : '1=1';
   const url = `${ARCGIS_LAYER_URL}/query?where=${encodeURIComponent(where)}&outFields=*&orderByFields=objectid DESC&resultRecordCount=200&f=json`;
-  const res = await fetch(url);
-  const data = await res.json();
-  incidentes = (data.features || []).map(f => ({ ...f.attributes, __geometry: f.geometry }));
-  refreshFilterOptions();
-  applyFilters();
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    incidentes = (data.features || []).map(f => ({ ...f.attributes, __geometry: f.geometry }));
+    refreshFilterOptions();
+    applyFilters();
+  } catch (err) {
+    alert('No se pudo cargar la lista de incidentes. Revisa tu conexión a internet.\n\n' + err.message);
+  }
 }
 
 function refreshFilterOptions() {
@@ -274,8 +278,12 @@ async function deleteAttachment(objectid, attId) {
   const body = new URLSearchParams();
   body.append('f', 'json');
   body.append('attachmentIds', attId);
-  await fetch(`${ARCGIS_LAYER_URL}/${objectid}/deleteAttachments`, { method: 'POST', body });
-  loadAttachments(objectid);
+  try {
+    await fetch(`${ARCGIS_LAYER_URL}/${objectid}/deleteAttachments`, { method: 'POST', body });
+    loadAttachments(objectid);
+  } catch (err) {
+    alert('No se pudo eliminar el adjunto. Revisa tu conexión a internet.\n\n' + err.message);
+  }
 }
 
 async function uploadAttachments(objectid, files) {
@@ -302,18 +310,19 @@ async function performDelete() {
   const body = new URLSearchParams();
   body.append('f', 'json');
   body.append('objectIds', objectid);
-  const res = await fetch(`${ARCGIS_LAYER_URL}/deleteFeatures`, { method: 'POST', body });
-  const data = await res.json();
-  const result = (data.deleteResults || [])[0];
-  if (result && result.success) loadIncidentes();
-  else alert('Error al eliminar: ' + JSON.stringify(data));
+  try {
+    const res = await fetch(`${ARCGIS_LAYER_URL}/deleteFeatures`, { method: 'POST', body });
+    const data = await res.json();
+    const result = (data.deleteResults || [])[0];
+    if (result && result.success) loadIncidentes();
+    else alert('Error al eliminar: ' + JSON.stringify(data));
+  } catch (err) {
+    alert('No se pudo conectar con ArcGIS Online. Revisa tu conexión a internet e intenta de nuevo.\n\n' + err.message);
+  }
 }
 
 async function saveIncidente(e) {
   e.preventDefault();
-  const objectid = val('f_objectid');
-  const lat = val('f_lat');
-  const lon = val('f_lon');
 
   const telDigits = val('f_Telefono').replace(/\D/g, '');
   if (telDigits && Number(telDigits) > 2147483647) {
@@ -321,6 +330,10 @@ async function saveIncidente(e) {
     return;
   }
   const telefono = telDigits ? Number(telDigits) : null;
+
+  const objectid = val('f_objectid');
+  const lat = val('f_lat');
+  const lon = val('f_lon');
 
   const attributes = {
     Fecha: localValueToEpochUTC(val('f_Fecha')),
@@ -350,17 +363,29 @@ async function saveIncidente(e) {
   body.append('f', 'json');
   body.append('features', JSON.stringify([feature]));
 
-  const res = await fetch(`${ARCGIS_LAYER_URL}/${endpoint}`, { method: 'POST', body });
-  const data = await res.json();
-  const result = (data.addResults || data.updateResults || [])[0];
-  if (result && result.success) {
-    const savedObjectId = objectid ? Number(objectid) : result.objectId;
-    const files = document.getElementById('f_Attachments').files;
-    if (files.length) await uploadAttachments(savedObjectId, files);
-    closeModal();
-    loadIncidentes();
-  } else {
-    alert('Error al guardar: ' + JSON.stringify(data));
+  const submitBtn = document.querySelector('#incidentForm button[type="submit"]');
+  const originalLabel = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Guardando...';
+
+  try {
+    const res = await fetch(`${ARCGIS_LAYER_URL}/${endpoint}`, { method: 'POST', body });
+    const data = await res.json();
+    const result = (data.addResults || data.updateResults || [])[0];
+    if (result && result.success) {
+      const savedObjectId = objectid ? Number(objectid) : result.objectId;
+      const files = document.getElementById('f_Attachments').files;
+      if (files.length) await uploadAttachments(savedObjectId, files);
+      closeModal();
+      loadIncidentes();
+    } else {
+      alert('Error al guardar: ' + JSON.stringify(data));
+    }
+  } catch (err) {
+    alert('No se pudo conectar con ArcGIS Online. Revisa tu conexión a internet e intenta de nuevo.\n\n' + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
   }
 }
 

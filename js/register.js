@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       password: document.getElementById('reg_Password').value
     });
 
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
     msg.textContent = 'Guardando...';
     try {
       const res = await fetch(GOOGLE_SHEETS_WEBAPP_URL, { method: 'POST', body });
@@ -59,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       msg.textContent = 'Error de conexión con Google Sheets: ' + err.message;
+    } finally {
+      btn.disabled = false;
     }
   });
 });
