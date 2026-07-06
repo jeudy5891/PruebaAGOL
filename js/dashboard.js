@@ -391,8 +391,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initDatePickers();
   if (window.lucide) lucide.createIcons();
 
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+  const sidebarEl = document.getElementById('sidebar');
+  const backdropEl = document.getElementById('sidebarBackdrop');
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  function toggleSidebar() {
+    if (isMobile()) {
+      sidebarEl.classList.toggle('mobile-open');
+      backdropEl.classList.toggle('open');
+    } else {
+      sidebarEl.classList.toggle('collapsed');
+    }
+  }
+  document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+  document.getElementById('sidebarToggleMobile').addEventListener('click', toggleSidebar);
+  backdropEl.addEventListener('click', () => {
+    sidebarEl.classList.remove('mobile-open');
+    backdropEl.classList.remove('open');
   });
 
   document.getElementById('btnAdd').addEventListener('click', () => openModal('add'));

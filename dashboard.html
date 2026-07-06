@@ -14,6 +14,7 @@
 <body>
 
 <div class="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <button class="toggle-btn" id="sidebarToggle" title="Colapsar menú"><i data-lucide="menu" width="20" height="20"></i></button>
@@ -41,6 +42,11 @@
   </aside>
 
   <main class="main">
+    <div class="mobile-topbar">
+      <button class="toggle-btn" id="sidebarToggleMobile" title="Abrir menú"><i data-lucide="menu" width="22" height="22"></i></button>
+      <span class="mobile-topbar-title">Incidentes 911</span>
+    </div>
+
     <div class="main-header">
       <div>
         <h1>Incidentes</h1>
@@ -80,18 +86,20 @@
     </div>
 
     <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Consecutivo</th>
-            <th>Fecha</th>
-            <th>Región</th>
-            <th>CME</th>
-            <th style="text-align:right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Consecutivo</th>
+              <th>Fecha</th>
+              <th>Región</th>
+              <th>CME</th>
+              <th style="text-align:right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
       <div class="empty-state" id="emptyState" style="display:none">No hay incidentes registrados aún.</div>
     </div>
   </main>
